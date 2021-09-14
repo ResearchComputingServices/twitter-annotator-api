@@ -62,10 +62,6 @@ def create_tables():
             id int PRIMARY KEY
         )
         """,
-        """ CREATE TABLE users (
-            id int PRIMARY KEY
-                )
-        """,
         """ CREATE TABLE answer (
             id int PRIMARY KEY,
             question_id int,
@@ -77,7 +73,10 @@ def create_tables():
             id int PRIMARY KEY,
             active boolean,
             question_type int,
-            text text
+            text text,
+            question_number int,
+            version_number int,
+            deleted boolean
                 )
         """,
         """ CREATE TABLE annotation (
@@ -85,11 +84,7 @@ def create_tables():
             tweet_id int,
             user_id int,
             question_id int,
-            answer_id int,
-            FOREIGN KEY (tweet_id) REFERENCES tweet (id),
-            FOREIGN KEY (user_id) REFERENCES users (id),
-            FOREIGN KEY (answer_id) REFERENCES answer (id),
-            FOREIGN KEY (question_id) REFERENCES question (id)
+            answer_id int
                 )
         """,
 
@@ -106,7 +101,8 @@ def create_tables():
         """ CREATE TABLE question_option (
             id int PRIMARY KEY,
             text text,
-            question_id int
+            question_id int,
+            version_number int
                 )
         """
 
@@ -214,13 +210,14 @@ def clear_tables():
 
     cursor.execute("DROP TABLE IF EXISTS {};".format("annotation"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
-    '''
+
     cursor.execute("DROP TABLE IF EXISTS {};".format("users"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("answer"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("question"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("question_type"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("question_option"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("answer_question_option"))
+    '''
     cursor.execute("DROP TABLE IF EXISTS {};".format("vendor_parts"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("part_drawings"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("freetext_trial_run"))
@@ -236,11 +233,58 @@ def clear_tables():
     # Closing the connection
     conn.close()
 
+def add_sample_data():
+    try:
+        params = config()
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+        # Setting auto commit false
+        conn.autocommit = True
+
+        # Creating a cursor object using the cursor() method
+        cursor = conn.cursor()
+
+        postgres_insert_query = """ INSERT INTO question (id, active, question_type, text, question_number, version_number, deleted) VALUES (%s,%s,%s,%s,%s,%s,%s)"""
+        record_to_insert = (1, True, 1, "Please choose hashtag(s) for this tweet", 1, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, True, 0, "Does this tweet contain videos?", 2, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (3, True, 2, "Please enter the location that the tweet linked with, e.g. Toronto", 3, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        postgres_insert_query = """ INSERT INTO question_option (id, text, question_id, version_number) VALUES (%s,%s,%s,%s)"""
+        record_to_insert = (1, "#torontostrong", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, "#incel", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (3, "#bluejays", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        record_to_insert = (4, "Yes", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (5, "No", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (6, "Unknown", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        conn.commit()
+        print("Record inserted successfully into mobile table")
+
+    except (Exception, psycopg2.Error) as error:
+        print("Failed to insert record into mobile table", error)
+
+    finally:
+        # closing database connection.
+        if conn:
+            cursor.close()
+            conn.close()
+            print("PostgreSQL connection is closed")
 
 if __name__ == '__main__':
     #connect()
     clear_tables()
     create_tables()
-    create_tables_tweet()
+    add_sample_data()
+    #create_tables_tweet()
 
 

@@ -616,7 +616,7 @@ def read_data_Toronto_Van_Attach_Twitter_45001_60000():
 if __name__ == '__main__':
     #connect()
     #clear_tables()
-    #create_tables()
+    create_tables()
     #create_table_test()
     create_tables_van()
     # add_data()
