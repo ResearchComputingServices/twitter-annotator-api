@@ -209,7 +209,7 @@ def clear_tables():
 
 
     cursor.execute("DROP TABLE IF EXISTS {};".format("annotation"))
-    cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
+    #cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
 
     cursor.execute("DROP TABLE IF EXISTS {};".format("users"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("answer"))
