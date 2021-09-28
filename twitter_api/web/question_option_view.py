@@ -6,8 +6,8 @@ from configparser import ConfigParser
 from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-#from twitter_api.models.question import QuestionModel
-#from twitter_api.models.question_option import QuestionOptionModel
+# from twitter_api.models.question import QuestionModel
+# from twitter_api.models.question_option import QuestionOptionModel
 from twitter_api.models.tweet import TweetModel
 from twitter_api.twitter_database.config_database import config
 import psycopg2
@@ -20,6 +20,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:admin@127.0.0.1:5
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
+
 
 class QuestionModel(db.Model):
     __tablename__ = 'question'
@@ -53,6 +54,7 @@ class QuestionModel(db.Model):
     def __repr__(self):
         return f"<Question {self.text}>"
 
+
 class QuestionOptionModel(db.Model):
     __tablename__ = 'question_option'
 
@@ -76,10 +78,99 @@ class QuestionOptionModel(db.Model):
     def __repr__(self):
         return f"<Question {self.text}>"
 
-@app.route('/api/hello')
 
+class TweetModel(db.Model):
+    __tablename__ = 'tweet'
+
+    id_unique = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Text)
+    created_at = db.Column(db.Text)
+    date = db.Column(db.Text)
+    hashtags = db.Column(db.Text)
+    id = db.Column(db.Text)
+    likes_count = db.Column(db.Text)
+    link = db.Column(db.Text)
+    location = db.Column(db.Text)
+    mentions = db.Column(db.Text)
+    name = db.Column(db.Text)
+    photos = db.Column(db.Text)
+    place = db.Column(db.Text)
+    replies_count = db.Column(db.Text)
+    retweet = db.Column(db.Text)
+    retweets_count = db.Column(db.Text)
+    time = db.Column(db.Text)
+    relevance = db.Column(db.Text)
+    tweet = db.Column(db.Text)
+    urls = db.Column(db.Text)
+    user_id = db.Column(db.Text)
+    username = db.Column(db.Text)
+    video = db.Column(db.Text)
+
+    def __init__(self, conversation_id, created_at, date, hashtags, id, likes_count, link, location, mentions, name,
+                 photos, place, replies_count, retweet, retweets_count, time, relevance, tweet, urls, user_id, username,
+                 video):
+        self.conversation_id = conversation_id
+        self.created_at = created_at
+        self.date = date
+        self.hashtags = hashtags
+        self.id = id
+        self.likes_count = likes_count
+        self.link = link
+        self.location = location
+        self.mentions = mentions
+        self.name = name
+        self.photos = photos
+        self.place = place
+        self.replies_count = replies_count
+        self.retweet = retweet
+        self.retweets_count = retweets_count
+        self.time = time
+        self.relevance = relevance
+        self.tweet = tweet
+        self.urls = urls
+        self.user_id = user_id
+        self.username = username
+        self.video = video
+
+    def __repr__(self):
+        return f"<Tweet {self.tweet}>"
+
+
+class AnnotatedTweetModel(db.Model):
+    __tablename__ = 'annotated_tweet'
+
+    id_unique = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Text)
+    hashtags = db.Column(db.Text)
+    name = db.Column(db.Text)
+    tweet = db.Column(db.Text)
+    user_id = db.Column(db.Text)
+
+    def __init__(self, id_unique, date, hashtags, name, tweet, user_id):
+        self.id_unique = id_unique
+        self.date = date
+        self.hashtags = hashtags
+        self.name = name
+        self.tweet = tweet
+        self.user_id = user_id
+
+    def __init__(self, item):
+        # BaseModel.__init__(self, item)
+        self.id_unique = item.get('id_unique')
+        self.date = item.get('date')
+        self.hashtags = item.get('hashtags')
+        self.name = item.get('name')
+        self.tweet = item.get('tweet')
+        self.user_id = item.get('user_id')
+
+    def __repr__(self):
+        return f"<Question {self.tweet}>"
+
+
+@app.route('/api/hello')
 def favi():
     return 'Hello', 200
+
 
 '''
 @app.route('/api/load_data', methods=['GET'])
@@ -98,13 +189,55 @@ def load_data():
 
 '''
 
+
 @app.route('/api/highlight', methods=['POST'])
 def highlight():
     try:
         data = request.get_json()
-        # add data to database
+        # get questions and answers, annotate the tweet based on the user's response
+        # answer = data["values"]["Please choose hashtag(s) for this tweet"]
+        answer = data["values"]["Please enter hashtag(s) for this tweet, separated by comma "]
         print(data)
-        response = jsonify(data)
+        print(answer)
+        answer_list = answer.split(",")
+        answer_list_without_empty_space = []
+        for ans in answer_list:
+            answer_list_without_empty_space.append(ans.replace(" ", ""))
+        print(answer_list_without_empty_space)
+        tweets = TweetModel.query.limit(100).all()
+        tweet_results = [
+            {
+                "id": single_tweet.id_unique,
+                "date": single_tweet.date,
+                "hashtags": single_tweet.hashtags,
+                "name": single_tweet.name,
+                "tweet": single_tweet.tweet,
+                "user_id": single_tweet.user_id.split('.')[0],
+            } for single_tweet in tweets]
+
+        for tweet_result in tweet_results:
+            check = any(item in tweet_result["hashtags"] for item in answer_list_without_empty_space)
+            if check:
+                print("here")
+                max_id = 0
+                annotated_tweets = AnnotatedTweetModel.query.all()
+                for annotated_tweet in annotated_tweets:
+                    if annotated_tweet.id_unique > max_id:
+                        max_id = annotated_tweet.id_unique
+                annotated_tweet_to_add = {}
+
+                annotated_tweet_to_add["id_unique"] = max_id + 1
+
+                annotated_tweet_to_add["date"] = tweet_result["date"]
+                annotated_tweet_to_add["hashtags"] = tweet_result["hashtags"]
+                annotated_tweet_to_add["name"] = tweet_result["name"]
+                annotated_tweet_to_add["tweet"] = tweet_result["tweet"]
+                annotated_tweet_to_add["user_id"] = tweet_result["user_id"]
+                tweet_to_add = AnnotatedTweetModel(annotated_tweet_to_add)
+                db.session.add(tweet_to_add)
+                db.session.commit()
+
+        response = "success", 200
 
     except Exception as e:
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
@@ -113,11 +246,10 @@ def highlight():
     return response
 
 
-
 @app.route('/api/get_question_option', methods=['GET'])
 def get_question_option():
     try:
-        #print('get_question_option')
+        # print('get_question_option')
         questions = QuestionModel.query.all()
         questions = QuestionModel.query.filter_by(deleted=False).all()
         print(questions)
@@ -130,7 +262,7 @@ def get_question_option():
                 "question_number": question.question_number
 
             } for question in questions]
-        #print(Question_results)
+        # print(Question_results)
         Question_id_unsort = []
         for Question_result in Question_results:
             Question_id_unsort.append(Question_result.get("question_number"))
@@ -139,8 +271,8 @@ def get_question_option():
         Question_results_sorted = []
         for i in range(len(Question_id_sorted)):
             for Question_result in Question_results:
-                if Question_result.get("question_number") == Question_id_sorted[i] and Question_result.get("active") == True:
-
+                if Question_result.get("question_number") == Question_id_sorted[i] and Question_result.get(
+                        "active") == True:
                     Question_results_sorted.append(Question_result)
 
         questions_options = QuestionOptionModel.query.all()
@@ -170,14 +302,17 @@ def get_question_option():
 
 
 @app.route('/api/get_tweet_id', methods=['GET'])
-
 def get_tweet_id():
     try:
         # tweets = TweetModel.query.all()
+        '''
         tweet = TweetModel.query.filter_by(id_unique=2).first()
         full_link = tweet.link
         id_for_tweet = full_link.split("/")
         response = jsonify(id_for_tweet[-1])
+        '''
+        response = jsonify(1)
+
     except Exception as e:
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
         response = Response(json.dumps(error), 500, mimetype="application/json")
@@ -185,10 +320,9 @@ def get_tweet_id():
 
 
 @app.route('/api/get_all_question_option', methods=['GET'])
-
 def get_all_question_option():
     try:
-        #print('get_all_question_option')
+        # print('get_all_question_option')
         questions = QuestionModel.query.all()
         questions = QuestionModel.query.filter_by(deleted=False).all()
         Question_results = [
@@ -226,9 +360,8 @@ def get_all_question_option():
         for i in range(len(Question_option_id_sorted)):
             for Question_option_result in Question_options_results:
                 if Question_option_result.get("id") == Question_option_id_sorted[i]:
-
                     Question_option_results_sorted.append(Question_option_result)
-        #print("success")
+        # print("success")
         response = {"questions": Question_results_sorted, "options": Question_option_results_sorted}
     except Exception as e:
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
@@ -305,7 +438,6 @@ def update_single_question_option():
         question.deleted = True
         db.session.commit()
 
-
         print("reate_single_question_option")
         data = request.get_json()
         print(data)
@@ -332,9 +464,8 @@ def update_single_question_option():
         question_data["question_type"] = int_question_type
         question_data["text"] = data["text"]
 
-
         question_data["question_number"] = question.question_number
-        question_data["version_number"] = question.version_number+1
+        question_data["version_number"] = question.version_number + 1
         question_data["deleted"] = False
 
         questions_to_add = QuestionModel(question_data)
@@ -366,8 +497,8 @@ def update_single_question_option():
                 option_data_to_add["text"] = option
 
                 option_data_to_add["question_id"] = int(max_id + 1)
-                option_data_to_add["version_number"] = question.version_number+1
-                #option_data_to_add["active"] = question_active
+                option_data_to_add["version_number"] = question.version_number + 1
+                # option_data_to_add["active"] = question_active
                 option_to_add = QuestionOptionModel(option_data_to_add)
                 db.session.add(option_to_add)
                 db.session.commit()
@@ -415,12 +546,12 @@ def delete_single_question_option():
         print(question)
         question.active = False
         question.deleted = True
-        #data = request.get_json()
+        # data = request.get_json()
         print('delete_single_question_option')
         specific_id = data["id"]
         corresponding_options = data["options"]
 
-        #single_question_to_delete = QuestionModel.query.filter_by(id=specific_id).first()
+        # single_question_to_delete = QuestionModel.query.filter_by(id=specific_id).first()
 
         if corresponding_options == []:
             max_option_id = 0
@@ -461,6 +592,7 @@ def delete_single_question_option():
         response = Response(json.dumps(error), 500, mimetype="application/json")
     return response
 
+
 '''
 @app.route('/api/delete_single_question_option', methods=['DELETE'])
 def delete_single_question_option():
@@ -486,6 +618,7 @@ def delete_single_question_option():
         response = Response(json.dumps(error), 500, mimetype="application/json")
     return response
 '''
+
 
 @app.route('/api/create_single_question_option', methods=['POST'])
 def create_single_question_option():
@@ -522,7 +655,7 @@ def create_single_question_option():
             if question.question_number > max_question_number:
                 max_question_number = question.question_number
 
-        question_data["question_number"] = max_question_number+1
+        question_data["question_number"] = max_question_number + 1
         question_data["version_number"] = 1
         question_data["deleted"] = False
 
@@ -554,4 +687,72 @@ def create_single_question_option():
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
         response = Response(json.dumps(error), 500)
 
+    return response
+
+
+@app.route('/api/get_all_tweets', methods=['GET'])
+def get_all_tweets():
+    try:
+        tweets = TweetModel.query.limit(1000).all()
+        tweet_results = [
+            {
+                "id": single_tweet.id_unique,
+                "date": single_tweet.date,
+                "hashtags": single_tweet.hashtags,
+                "name": single_tweet.name,
+                "tweet": single_tweet.tweet,
+                "user_id": single_tweet.user_id.split('.')[0],
+                "annotated": "No"
+            } for single_tweet in tweets]
+
+        # tweet = TweetModel.query.filter_by(id_unique=2).first()
+        # full_link = tweet.link
+        # id_for_tweet = full_link.split("/")
+        # response = jsonify()
+
+        response = {"tweets": tweet_results}
+
+    except Exception as e:
+        error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
+        response = Response(json.dumps(error), 500, mimetype="application/json")
+    return response
+
+
+@app.route('/api/get_all_tweets_annotated', methods=['GET'])
+def get_all_tweets_annotated():
+    try:
+        tweets = AnnotatedTweetModel.query.limit(1000).all()
+        tweet_results = [
+            {
+                "id": single_tweet.id_unique,
+                "date": single_tweet.date,
+                "hashtags": single_tweet.hashtags,
+                "name": single_tweet.name,
+                "tweet": single_tweet.tweet,
+                "user_id": single_tweet.user_id.split('.')[0],
+                "annotated": "Yes"
+            } for single_tweet in tweets]
+
+        # tweet = TweetModel.query.filter_by(id_unique=2).first()
+        # full_link = tweet.link
+        # id_for_tweet = full_link.split("/")
+        # response = jsonify()
+
+        response = {"tweets": tweet_results}
+
+    except Exception as e:
+        error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
+        response = Response(json.dumps(error), 500, mimetype="application/json")
+    return response
+
+
+@app.route('/api/get_single_tweet', methods=['GET'])
+def get_single_tweets():
+    try:
+
+        response = "success", 200
+
+    except Exception as e:
+        error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
+        response = Response(json.dumps(error), 500, mimetype="application/json")
     return response

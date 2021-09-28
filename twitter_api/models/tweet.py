@@ -16,7 +16,7 @@ db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
 class TweetModel(db.Model):
-    __tablename__ = 'tweet'
+    __tablename__ = 'totonto_van_attach'
 
     id_unique = db.Column(db.Integer, primary_key=True)
     conversation_id = db.Column(db.Text)
