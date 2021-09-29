@@ -84,7 +84,9 @@ def create_tables():
             tweet_id int,
             user_id int,
             question_id int,
-            answer_id int
+            answer_id int,
+            text_answer text,
+            answer, int
                 )
         """,
 
