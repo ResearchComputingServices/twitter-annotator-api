@@ -300,41 +300,6 @@ def create_table_test():
 
     print("Table created...")
 
-def create_table_annotated_tweet():
-    """ create tables in the PostgreSQL database"""
-    commands = (
-        """ CREATE TABLE annotated_tweet (
-            id_unique SERIAL PRIMARY KEY,
-            date TEXT,
-            hashtags TEXT,
-            name TEXT,
-            tweet TEXT,
-            user_id TEXT,
-                )
-        """)
-    conn = None
-    try:
-        # read the connection parameters
-        params = config()
-        # connect to the PostgreSQL server
-        conn = psycopg2.connect(**params)
-        cur = conn.cursor()
-        # create table one by one
-
-        for command in commands:
-            cur.execute(command)
-        # close communication with the PostgreSQL database server
-        cur.close()
-
-        # commit the changes
-        conn.commit()
-    except (Exception, psycopg2.DatabaseError) as error:
-        print(error)
-    finally:
-        if conn is not None:
-            conn.close()
-
-    print("Table created...")
 
 def clear_tables():
     params = config()
@@ -654,7 +619,6 @@ if __name__ == '__main__':
     create_tables()
     #create_table_test()
     create_tables_van()
-    create_table_annotated_tweet()
     # add_data()
     #read_data_freetext_trial_run()
     #read_data_likert_trial_run()

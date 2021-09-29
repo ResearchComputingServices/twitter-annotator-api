@@ -167,6 +167,39 @@ class AnnotatedTweetModel(db.Model):
         return f"<Question {self.tweet}>"
 
 
+class AnnotationModel(db.Model):
+    __tablename__ = 'annotation'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tweet_id = db.Column(db.Integer)
+    user_id = db.Column(db.Integer)
+    question_id = db.Column(db.Integer)
+    answer_id = db.Column(db.Integer)
+    text_answer = db.Column(db.Text)
+    answer = db.Column(db.Integer)
+
+    def __init__(self, id, tweet_id, user_id, question_id, answer_id, text_answer, answer):
+        self.id = id
+        self.tweet_id = tweet_id
+        self.user_id = user_id
+        self.question_id = question_id
+        self.answer_id = answer_id
+        self.text_answer = text_answer
+        self.answer = answer
+
+    def __init__(self, item):
+        # BaseModel.__init__(self, item)
+        self.id = item.get('id')
+        self.tweet_id = item.get('tweet_id')
+        self.user_id = item.get('user_id')
+        self.question_id = item.get('question_id')
+        self.answer_id = item.get('answer_id')
+        self.text_answer = item.get('text_answer')
+        self.answer = item.get('answer')
+
+    def __repr__(self):
+        return f"<Question {self.id}>"
+
 @app.route('/api/hello')
 def favi():
     return 'Hello', 200
