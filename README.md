@@ -22,7 +22,7 @@ Step 6 - Start the docker containers (Optional, if you use docker):
 
 Step 7 - Create language2test database in postgres (Optional, if you use docker):
 - `docker exec -it --user postgres `docker ps | grep postgres | cut -f 1 -d\ | head -n 1` bash`
-- `createdb language2test`
+- `createdb twitter_data`
 
 Step 8 - Create the database schema:
 - `python make_db.py`
