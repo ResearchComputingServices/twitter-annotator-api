@@ -86,7 +86,7 @@ def create_tables():
             question_id int,
             answer_id int,
             text_answer text,
-            answer, int
+            answer int
                 )
         """,
 

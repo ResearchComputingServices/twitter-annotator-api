@@ -3,7 +3,6 @@ from flask import Flask
 from flask import request, send_file
 from flask import json, jsonify, Response, blueprints
 from configparser import ConfigParser
-from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 # from twitter_api.models.question import QuestionModel
@@ -12,7 +11,7 @@ from twitter_api.models.tweet import TweetModel
 from twitter_api.twitter_database.config_database import config
 import psycopg2
 from twitter_api.web.common_view import twitter_bp
-from onlinedatabase_api.decorators.crossorigin import crossdomain
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:admin@127.0.0.1:5432/twitter_data"

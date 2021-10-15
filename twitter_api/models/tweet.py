@@ -3,7 +3,6 @@ from flask import Flask
 from flask import request, send_file
 from flask import json, jsonify, Response, blueprints
 from configparser import ConfigParser
-from flask_cors import cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
