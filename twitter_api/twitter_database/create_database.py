@@ -53,8 +53,10 @@ def connect():
             conn.close()
             print('Database connection closed.')
 
-
-def create_tables():
+#Deprecated.
+#This procedure contains the original schemas
+#Some tables are not needed.
+def create_tables_original():
     """ create tables in the PostgreSQL database"""
     commands = (
         """
@@ -100,12 +102,20 @@ def create_tables():
             question_option_id int
                 )
         """,
+
         """ CREATE TABLE question_option (
             id int PRIMARY KEY,
             text text,
             question_id int,
             version_number int
                 )
+        """,
+        """ CREATE TABLE assignation (
+                    id int PRIMARY KEY,
+                    user_id int,
+                    tweet_id int,
+                    answer int
+                        )
         """
 
     )
@@ -131,6 +141,99 @@ def create_tables():
 
     print("Table created...")
 
+
+def create_tables():
+    """ create tables in the PostgreSQL database"""
+    commands = (
+        """
+                CREATE TABLE tweet (
+                  id SERIAL PRIMARY KEY,
+                  conversation_id TEXT,
+                  created_at TIMESTAMP,
+                  date TIMESTAMP,
+                  hashtags TEXT,
+                  likes_count text,
+                  link TEXT,
+                  location TEXT,
+                  mentions TEXT,
+                  name TEXT,
+                  photos TEXT,
+                  place text,
+                  replies_count INT,
+                  retweet TEXT,
+                  time TIMESTAMP,
+                  time_zone TEXT,
+                  Relevance TEXT,
+                  tweet text,
+                  urls text,
+                  user_id text,
+                  username text,
+                  video text
+              )
+        """,
+        """ CREATE TABLE question (
+            id int PRIMARY KEY,
+            active boolean,
+            question_type int,
+            text text,
+            question_number int,
+            version_number int,
+            deleted boolean
+                )
+        """,
+        """ CREATE TABLE annotation (
+                   id int PRIMARY KEY,
+                   tweet_id int,
+                   user_id int,
+                   question_id int,
+                   question_option_id int,
+                   text_answer text,
+                   annotation_id int
+                       )
+        """,
+        """ CREATE TABLE question_type (
+                  id int PRIMARY KEY,
+                  type text
+                      )
+        """,
+        """ CREATE TABLE question_option (
+            id int PRIMARY KEY,
+            text text,
+            question_id int,
+            version_number int
+                )
+        """,
+        """ CREATE TABLE assignation (
+                         id int PRIMARY KEY,
+                         user_id int,
+                         tweet_id int,
+                         answer int
+                             )
+        """
+    )
+    conn = None
+    try:
+        # read the connection parameters
+        params = config()
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+        cur = conn.cursor()
+        # create table one by one
+        for command in commands:
+            cur.execute(command)
+        # close communication with the PostgreSQL database server
+        cur.close()
+        # commit the changes
+        conn.commit()
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+
+    print("Tables created...")
+
+#Deprecated.
 def create_tables_tweet():
     """ create tables in the PostgreSQL database"""
     commands = (
@@ -211,8 +314,8 @@ def clear_tables():
 
 
     cursor.execute("DROP TABLE IF EXISTS {};".format("annotation"))
-    #cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
-
+    cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("assignation"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("users"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("answer"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("question"))
@@ -227,7 +330,7 @@ def clear_tables():
     cursor.execute("DROP TABLE IF EXISTS {};".format("Toronto_Van_Attach_Twitter"))
     cursor.execute("DROP TABLE IF EXISTS {};".format("Annotation_table"))
     '''
-    print("Table dropped... ")
+    print("Tables dropped... ")
 
     # Commit your changes in the database
     conn.commit()
@@ -269,8 +372,16 @@ def add_sample_data():
         record_to_insert = (6, "Unknown", 2, 1)
         cursor.execute(postgres_insert_query, record_to_insert)
 
+        postgres_insert_query = """ INSERT INTO question_type (id, type) VALUES (%s,%s)"""
+        record_to_insert = (0, "radio")
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (1, "checkbox")
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, "text")
+        cursor.execute(postgres_insert_query, record_to_insert)
+
         conn.commit()
-        print("Record inserted successfully into mobile table")
+        print("Records inserted successfully")
 
     except (Exception, psycopg2.Error) as error:
         print("Failed to insert record into mobile table", error)
