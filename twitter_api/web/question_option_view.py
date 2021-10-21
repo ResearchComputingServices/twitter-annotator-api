@@ -192,12 +192,12 @@ class AnnotationModel(db.Model):
         self.tweet_id = item.get('tweet_id')
         self.user_id = item.get('user_id')
         self.question_id = item.get('question_id')
-        self.answer_id = item.get('answer_id')
+        self.question_option_id = item.get('answer_id')
         self.text_answer = item.get('text_answer')
-        self.answer = item.get('answer')
+        self.annotation_id = item.get('answer')
 
     def __repr__(self):
-        return f"<Question {self.id}>"
+        return f"<Annotation {self.id}>"
 
 @app.route('/api/hello')
 def favi():
