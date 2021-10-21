@@ -147,11 +147,12 @@ def create_tables():
     commands = (
         """
                 CREATE TABLE tweet (
-                  id SERIAL PRIMARY KEY,
+                  id_unique SERIAL PRIMARY KEY,
                   conversation_id TEXT,
                   created_at TIMESTAMP,
                   date TIMESTAMP,
                   hashtags TEXT,
+                  id TEXT,
                   likes_count text,
                   link TEXT,
                   location TEXT,

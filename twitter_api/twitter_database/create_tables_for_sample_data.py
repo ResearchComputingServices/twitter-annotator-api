@@ -78,7 +78,7 @@ def create_tables():
             id text
                 )
         """,
-        """ CREATE TABLE Toronto_Van_Attach_Twitter (
+        """ CREATE TABLE tweet (
             id_unique SERIAL PRIMARY KEY,
             conversation_id TEXT,
             created_at TEXT,
@@ -104,72 +104,44 @@ def create_tables():
             video text
                 )
         """,
-        """ CREATE TABLE Annotation_table (
-            id_unique SERIAL PRIMARY KEY,
-            conversation_id BOOLEAN,
-            created_at BOOLEAN,
-            date BOOLEAN,
-            hashtags BOOLEAN,
-            id BOOLEAN,
-            likes_count BOOLEAN,
-            link BOOLEAN,
-            location BOOLEAN,
-            mentions BOOLEAN,
-            name BOOLEAN,
-            photos BOOLEAN,
-            place BOOLEAN,
-            replies_count BOOLEAN,
-            retweet BOOLEAN,
-            retweets_count BOOLEAN,
-            time BOOLEAN,
-            Relevance BOOLEAN,
-            tweet BOOLEAN,
-            urls BOOLEAN,
-            user_id BOOLEAN,
-            username BOOLEAN,
-            video BOOLEAN,
-            video_question_1 BOOLEAN,
-            video_option_1_1 BOOLEAN,
-            video_option_1_2 BOOLEAN,
-            video_option_1_3 BOOLEAN,
-            video_option_1_4 BOOLEAN,
-            video_question_2 BOOLEAN,
-            video_option_2_1 BOOLEAN,
-            video_option_2_2 BOOLEAN,
-            video_option_2_3 BOOLEAN,
-            video_option_2_4 BOOLEAN,
-            video_question_3 BOOLEAN,
-            video_option_3_1 BOOLEAN,
-            video_option_3_2 BOOLEAN,
-            video_option_3_3 BOOLEAN,
-            video_option_3_4 BOOLEAN,
-            video_question_4 BOOLEAN,
-            video_option_4_1 BOOLEAN,
-            video_option_4_2 BOOLEAN,
-            video_option_4_3 BOOLEAN,
-            video_option_4_4 BOOLEAN,
-            checkbox_question_1 BOOLEAN,
-            checkbox_option_1_1 BOOLEAN,
-            checkbox_option_1_2 BOOLEAN,
-            checkbox_option_1_3 BOOLEAN,
-            checkbox_option_1_4 BOOLEAN,
-            checkbox_question_2 BOOLEAN,
-            checkbox_option_2_1 BOOLEAN,
-            checkbox_option_2_2 BOOLEAN,
-            checkbox_option_2_3 BOOLEAN,
-            checkbox_option_2_4 BOOLEAN,
-            checkbox_question_3 BOOLEAN,
-            checkbox_option_3_1 BOOLEAN,
-            checkbox_option_3_2 BOOLEAN,
-            checkbox_option_3_3 BOOLEAN,
-            checkbox_option_3_4 BOOLEAN,
-            checkbox_question_4 BOOLEAN,
-            checkbox_option_4_1 BOOLEAN,
-            checkbox_option_4_2 BOOLEAN,
-            checkbox_option_4_3 BOOLEAN,
-            checkbox_option_4_4 BOOLEAN,
-            input_text TEXT
+        """ CREATE TABLE question (
+            id int PRIMARY KEY,
+            active boolean,
+            question_type int,
+            text text,
+            question_number int,
+            version_number int,
+            deleted boolean
                 )
+        """,
+        """ CREATE TABLE annotation (
+                   id int PRIMARY KEY,
+                   tweet_id int,
+                   user_id int,
+                   question_id int,
+                   question_option_id int,
+                   text_answer text,
+                   annotation_id int
+                       )
+        """,
+        """ CREATE TABLE question_type (
+                  id int PRIMARY KEY,
+                  type text
+                      )
+        """,
+        """ CREATE TABLE question_option (
+            id int PRIMARY KEY,
+            text text,
+            question_id int,
+            version_number int
+                )
+        """,
+        """ CREATE TABLE assignation (
+                         id int PRIMARY KEY,
+                         user_id int,
+                         tweet_id int,
+                         answer int
+                             )
         """
     )
     conn = None
@@ -194,6 +166,7 @@ def create_tables():
 
     print("Table created...")
 
+#Deprecated
 def create_tables_van():
     """ create tables in the PostgreSQL database"""
     commands = (
@@ -246,7 +219,7 @@ def create_tables_van():
 
     print("Table created...")
 
-
+#Deprecated
 def create_table_test():
     """ create tables in the PostgreSQL database"""
     commands = (
@@ -300,8 +273,8 @@ def create_table_test():
 
     print("Table created...")
 
-
-def clear_tables():
+#Deprecated
+def clear_tables_original():
     params = config()
     # connect to the PostgreSQL server
     conn = psycopg2.connect(**params)
@@ -318,6 +291,44 @@ def clear_tables():
     cursor.execute("DROP TABLE IF EXISTS {};".format("Toronto_Van_Attach_Twitter"))
     #cursor.execute("DROP TABLE IF EXISTS {};".format("Annotation_table"))
     print("Table dropped... ")
+
+    # Commit your changes in the database
+    conn.commit()
+
+    # Closing the connection
+    conn.close()
+
+def clear_tables():
+    params = config()
+    # connect to the PostgreSQL server
+    conn = psycopg2.connect(**params)
+    # Setting auto commit false
+    conn.autocommit = True
+
+    # Creating a cursor object using the cursor() method
+    cursor = conn.cursor()
+
+    # Doping EMPLOYEE table if already exists
+
+
+    cursor.execute("DROP TABLE IF EXISTS {};".format("annotation"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("tweet"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("assignation"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("users"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("answer"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("question"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("question_type"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("question_option"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("answer_question_option"))
+
+    cursor.execute("DROP TABLE IF EXISTS {};".format("vendor_parts"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("part_drawings"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("freetext_trial_run"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("likert_trial_run"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("Toronto_Van_Attach_Twitter"))
+    cursor.execute("DROP TABLE IF EXISTS {};".format("Annotation_table"))
+
+    print("Tables dropped... ")
 
     # Commit your changes in the database
     conn.commit()
@@ -443,7 +454,7 @@ def add_data_Toronto_Van_Attach_Twitter(conversation_id, created_at, date, hasht
         print("here")
         conn.commit()
         # count = cursor.rowcount
-        print(conversation_id, "tweet inserted successfully into likert_trial_run table")
+        print(conversation_id, "tweet inserted successfully into tweet table")
 
     except (Exception, psycopg2.Error) as error:
         print("Failed to insert record into mobile freetext_trial_run", error)
@@ -613,12 +624,15 @@ def read_data_Toronto_Van_Attach_Twitter_45001_60000():
                                                 retweets_count, time, Relevance, tweet, urls, user_id, username, video)
 
 
+
+
 if __name__ == '__main__':
     #connect()
-    #clear_tables()
+    clear_tables()
     create_tables()
+
     #create_table_test()
-    create_tables_van()
+    #create_tables_van()
     # add_data()
     #read_data_freetext_trial_run()
     #read_data_likert_trial_run()
