@@ -174,18 +174,18 @@ class AnnotationModel(db.Model):
     tweet_id = db.Column(db.Integer)
     user_id = db.Column(db.Integer)
     question_id = db.Column(db.Integer)
-    answer_id = db.Column(db.Integer)
+    question_option_id = db.Column(db.Integer)
     text_answer = db.Column(db.Text)
-    answer = db.Column(db.Integer)
+    annotation_id = db.Column(db.Integer)
 
-    def __init__(self, id, tweet_id, user_id, question_id, answer_id, text_answer, answer):
+    def __init__(self, id, tweet_id, user_id, question_id, question_option_id, text_answer, annotation_id):
         self.id = id
         self.tweet_id = tweet_id
         self.user_id = user_id
         self.question_id = question_id
-        self.answer_id = answer_id
+        self.question_option_id = question_option_id
         self.text_answer = text_answer
-        self.answer = answer
+        self.annotation_id = annotation_id
 
     def __init__(self, item):
         # BaseModel.__init__(self, item)
@@ -193,9 +193,9 @@ class AnnotationModel(db.Model):
         self.tweet_id = item.get('tweet_id')
         self.user_id = item.get('user_id')
         self.question_id = item.get('question_id')
-        self.question_option_id = item.get('answer_id')
+        self.question_option_id = item.get('question_option_id')
         self.text_answer = item.get('text_answer')
-        self.annotation_id = item.get('answer')
+        self.annotation_id = item.get('annotation_id')
 
     def __repr__(self):
         return f"<Annotation {self.id}>"
@@ -223,8 +223,8 @@ def load_data():
 '''
 
 
-@app.route('/api/highlight', methods=['POST'])
-def highlight():
+@app.route('/api/highlight_2', methods=['POST'])
+def highlight_2():
     try:
         data = request.get_json()
         # get questions and answers, annotate the tweet based on the user's response
@@ -270,6 +270,75 @@ def highlight():
                 db.session.add(tweet_to_add)
                 db.session.commit()
 
+        response = "success", 200
+
+    except Exception as e:
+        error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
+        response = Response(json.dumps(error), 500, mimetype="application/json")
+
+    return response
+
+def create_annotation_record(record_id, tweet_id, user_id, question_db, answer_db, answer, annotation_id):
+    annotation = {}
+    annotation["id"] = record_id
+    annotation["tweet_id"] = tweet_id
+    annotation["user_id"] = user_id
+    annotation["question_id"] = question_db.id
+    annotation["text_answer"] = ""
+    if answer_db == None:
+        annotation["text_answer"] = answer
+    else:
+        annotation["question_option_id"] = answer_db.id
+
+    annotation["annotation_id"] = annotation_id
+    return annotation
+
+
+@app.route('/api/highlight', methods=['POST'])
+def highlight():
+    try:
+        data = request.get_json()
+        tweet_id='1' #It should come from the front-end (data)
+        user_id= '1' #It should come from the front-end (data)
+
+        record_count = db.session.query(AnnotationModel.id).count()
+        record_id = record_count + 1
+        if record_count>0:
+            last_record = db.session.query(AnnotationModel).order_by(AnnotationModel.id.desc()).first()
+            annotation_id = last_record.annotation_id + 1
+        else:
+            annotation_id = 1
+
+        #Get list of questions
+        questions_answers = data.values()
+        #print(questions_answers)
+        for q_a in questions_answers:
+            questions = q_a.keys()
+
+            for question in questions:
+                # Look for question id in database
+                question_db= QuestionModel.query.filter_by(text=question).first()
+
+                if question_db==None:
+                    response = Response(json.dumps(data), 404, mimetype="application/json")
+                    return response
+
+                answers = q_a[question]
+                if type(answers)!=list:
+                    a = answers
+                    answers = []
+                    answers.append(a)
+
+                for answer in answers:
+                    answer_db = QuestionOptionModel.query.filter_by(text=answer, question_id=question_db.id).first()
+                    annotation = create_annotation_record(record_id, tweet_id, user_id, question_db, answer_db, answer,
+                                                 annotation_id)
+                    annotation = AnnotationModel(annotation)
+                    db.session.add(annotation)
+
+                    record_id = record_id+1
+
+        db.session.commit()
         response = "success", 200
 
     except Exception as e:
@@ -342,7 +411,7 @@ def get_tweet_id():
         tweet = TweetModel.query.filter_by(id_unique=id_random).first()
         full_link = tweet.link
         link_list = full_link.split("/")
-        id_for_tweet = link_list[len(link_list)-1]   
+        id_for_tweet = link_list[len(link_list)-1]
         response = jsonify(id_for_tweet)
     except Exception as e:
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
