@@ -11,6 +11,7 @@ from twitter_api.models.tweet import TweetModel
 from twitter_api.twitter_database.config_database import config
 import psycopg2
 from twitter_api.web.common_view import twitter_bp
+import random
 
 
 app = Flask(__name__)
@@ -336,15 +337,13 @@ def get_question_option():
 @app.route('/api/get_tweet_id', methods=['GET'])
 def get_tweet_id():
     try:
-        # tweets = TweetModel.query.all()
-        '''
-        tweet = TweetModel.query.filter_by(id_unique=2).first()
+        tweets_count =  db.session.query(TweetModel.id_unique).count()
+        id_random = random.randint(0, tweets_count)
+        tweet = TweetModel.query.filter_by(id_unique=id_random).first()
         full_link = tweet.link
-        id_for_tweet = full_link.split("/")
-        response = jsonify(id_for_tweet[-1])
-        '''
-        response = jsonify(1)
-
+        link_list = full_link.split("/")
+        id_for_tweet = link_list[len(link_list)-1]   
+        response = jsonify(id_for_tweet)
     except Exception as e:
         error = {"exception": str(e), "message": "Exception has occurred. Check the format of the request."}
         response = Response(json.dumps(error), 500, mimetype="application/json")

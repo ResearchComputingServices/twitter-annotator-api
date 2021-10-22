@@ -625,20 +625,69 @@ def read_data_Toronto_Van_Attach_Twitter_45001_60000():
 
 
 
+def add_sample_data():
+    try:
+        params = config()
+        # connect to the PostgreSQL server
+        conn = psycopg2.connect(**params)
+        # Setting auto commit false
+        conn.autocommit = True
+
+        # Creating a cursor object using the cursor() method
+        cursor = conn.cursor()
+
+        postgres_insert_query = """ INSERT INTO question (id, active, question_type, text, question_number, version_number, deleted) VALUES (%s,%s,%s,%s,%s,%s,%s)"""
+        record_to_insert = (1, True, 1, "Please choose hashtag(s) for this tweet", 1, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, True, 0, "Does this tweet contain videos?", 2, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (3, True, 2, "Please enter the location that the tweet linked with, e.g. Toronto", 3, 1, False)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        postgres_insert_query = """ INSERT INTO question_option (id, text, question_id, version_number) VALUES (%s,%s,%s,%s)"""
+        record_to_insert = (1, "#torontostrong", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, "#incel", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (3, "#bluejays", 1, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        record_to_insert = (4, "Yes", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (5, "No", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (6, "Unknown", 2, 1)
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        postgres_insert_query = """ INSERT INTO question_type (id, type) VALUES (%s,%s)"""
+        record_to_insert = (0, "radio")
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (1, "checkbox")
+        cursor.execute(postgres_insert_query, record_to_insert)
+        record_to_insert = (2, "text")
+        cursor.execute(postgres_insert_query, record_to_insert)
+
+        conn.commit()
+        print("Records inserted successfully")
+
+    except (Exception, psycopg2.Error) as error:
+        print("Failed to insert record into mobile table", error)
+
+    finally:
+        # closing database connection.
+        if conn:
+            cursor.close()
+            conn.close()
+            print("PostgreSQL connection is closed")
+
 
 if __name__ == '__main__':
-    #connect()
     clear_tables()
     create_tables()
-
-    #create_table_test()
-    #create_tables_van()
-    # add_data()
-    #read_data_freetext_trial_run()
-    #read_data_likert_trial_run()
     read_data_Toronto_Van_Attach_Twitter_1_15000()
     read_data_Toronto_Van_Attach_Twitter_15001_30000()
     read_data_Toronto_Van_Attach_Twitter_30001_45000()
     read_data_Toronto_Van_Attach_Twitter_45001_60000()
+    add_sample_data()
 
 
