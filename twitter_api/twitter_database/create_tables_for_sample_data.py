@@ -57,27 +57,6 @@ def connect():
 def create_tables():
     """ create tables in the PostgreSQL database"""
     commands = (
-        """
-        CREATE TABLE freetext_trial_run (
-            id_unique SERIAL PRIMARY KEY,
-            mturk_id TEXT,
-            tweet_id TEXT,
-            tweet TEXT,
-            text TEXT,
-            answer TEXT,
-            id text
-        )
-        """,
-        """ CREATE TABLE likert_trial_run (
-            id_unique SERIAL PRIMARY KEY,
-            mturk_id TEXT,
-            tweet_id TEXT,
-            tweet TEXT,
-            text TEXT,
-            answer TEXT,
-            id text
-                )
-        """,
         """ CREATE TABLE tweet (
             id_unique SERIAL PRIMARY KEY,
             conversation_id TEXT,
@@ -496,7 +475,7 @@ def read_data_likert_trial_run():
 
 
 def read_data_Toronto_Van_Attach_Twitter_1_15000():
-    with open('Toronto_Van_Attach_Twitter.csv', newline='') as csvfile:
+    with open('Toronto_Van_Attach_Twitter.csv', newline='', encoding="utf-8") as csvfile:
         data = pd.read_csv(csvfile, nrows=15000)
         for _, row in data.iterrows():
             d = dict(row)
@@ -528,7 +507,7 @@ def read_data_Toronto_Van_Attach_Twitter_1_15000():
                                                 retweets_count, time, Relevance, tweet, urls, user_id, username, video)
 
 def read_data_Toronto_Van_Attach_Twitter_15001_30000():
-    with open('Toronto_Van_Attach_Twitter.csv', newline='') as csvfile:
+    with open('Toronto_Van_Attach_Twitter.csv', newline='', encoding="utf-8") as csvfile:
         data = pd.read_csv(csvfile, skiprows=(1, 15000), nrows=15000)
         for _, row in data.iterrows():
             d = dict(row)
@@ -560,7 +539,7 @@ def read_data_Toronto_Van_Attach_Twitter_15001_30000():
                                                 retweets_count, time, Relevance, tweet, urls, user_id, username, video)
 
 def read_data_Toronto_Van_Attach_Twitter_30001_45000():
-    with open('Toronto_Van_Attach_Twitter.csv', newline='') as csvfile:
+    with open('Toronto_Van_Attach_Twitter.csv', newline='', encoding="utf-8") as csvfile:
         data = pd.read_csv(csvfile, skiprows=(1, 30000), nrows=15000)
         for _, row in data.iterrows():
             d = dict(row)
@@ -592,7 +571,7 @@ def read_data_Toronto_Van_Attach_Twitter_30001_45000():
                                                 retweets_count, time, Relevance, tweet, urls, user_id, username, video)
 
 def read_data_Toronto_Van_Attach_Twitter_45001_60000():
-    with open('Toronto_Van_Attach_Twitter.csv', newline='') as csvfile:
+    with open('Toronto_Van_Attach_Twitter.csv', newline='', encoding="utf-8") as csvfile:
         data = pd.read_csv(csvfile, skiprows=(1, 45000), nrows=15000)
         for _, row in data.iterrows():
             d = dict(row)
